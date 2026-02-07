@@ -12,6 +12,12 @@ export async function getCurrentPositionHigh() {
   });
 }
 
+export async function getCurrentPositionBalanced() {
+  return await Location.getCurrentPositionAsync({
+    accuracy: Location.Accuracy.Balanced,
+  });
+}
+
 export async function getAddressLabel(
   lat: number,
   lng: number
@@ -33,4 +39,3 @@ export async function getAddressLabel(
   // fallback se reverse geocode non ha street/city
   return fullAddress || (a as any).formattedAddress || undefined;
 }
-

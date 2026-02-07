@@ -3,7 +3,7 @@ import { Spot } from "@/types/Spot";
 
 const LAST_KEY = "spot:last";
 const LIST_KEY = "spot:list";
-const MAX_ITEMS = 10;
+const MAX_ITEMS = 100;
 
 export async function getLastSpot(): Promise<Spot | null> {
   const raw = await AsyncStorage.getItem(LAST_KEY);

@@ -1,15 +1,19 @@
 import React, { useCallback, useMemo, useState } from "react";
 import {
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
-  Linking
+  Linking,
+  Share,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { deleteSpot, getSpotList, saveSpot } from "@/storage/SpotStorage";
@@ -27,17 +31,17 @@ type Spot = {
 
 export default function DetailScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string; mode?: string }>();
+  const params = useLocalSearchParams<{ id?: string; mode?: string; title?: string }>();
 
   const initialSpot: Spot = {
     id: params.id ?? "mock-id",
-    title: "Bar Centrale",
+    title: params.title ?? "Posto Salvato",
     note: "Tavolini fuori, ottimi cappuccini.",
     createdAt: new Date().toISOString(),
     lat: 45.464211,
     lng: 9.191383,
     accuracy: 12,
-    addressLabel: "Via Example 12, Milano",
+    addressLabel: "Via Duomo 12, Milano",
   };
 
   const [spot, setSpot] = useState<Spot>(initialSpot);
@@ -52,7 +56,8 @@ export default function DetailScreen() {
         const list = await getSpotList();
         const found = list.find((s) => s.id === params.id);
         if (isActive && found) {
-          setSpot(found);
+          const next = params.title ? { ...found, title: params.title } : found;
+          setSpot(next);
         }
       })();
 
@@ -100,6 +105,20 @@ export default function DetailScreen() {
   );
 };
 
+  const handleShare = async () => {
+    try {
+      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        `${spot.lat},${spot.lng}`
+      )}`;
+      const message = spot.title?.trim()
+        ? `${spot.title}\n${url}`
+        : url;
+      await Share.share({ message });
+    } catch (e: any) {
+      Alert.alert("Errore", e?.message ?? "Impossibile condividere la posizione.");
+    }
+  };
+
 
   const handleOpenMaps = async (spot: Spot) => {
       try {
@@ -120,10 +139,11 @@ export default function DetailScreen() {
     };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.screen}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <KeyboardAvoidingView
+        style={styles.screen}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
       {/* HERO CARD */}
       <View style={styles.heroCard}>
         <View style={styles.heroTopRow}>
@@ -179,12 +199,13 @@ export default function DetailScreen() {
             <Text style={styles.chipValue}>{latLngLabel}</Text>
           </View>
 
-          <View style={styles.chip}>
-            <Text style={styles.chipLabel}>ACCURACY</Text>
-            <Text style={styles.chipValue}>
-              {spot.accuracy != null ? `${Math.round(spot.accuracy)} m` : "—"}
-            </Text>
-          </View>
+          <Pressable style={styles.chip} onPress={handleShare}>
+            <Text style={styles.chipLabel}>CONDIVIDI</Text>
+            <View style={styles.chipIconRow}>
+              <Ionicons name="share-outline" size={16} color="#111827" />
+              <Text style={styles.chipValue}>Invia posizione</Text>
+            </View>
+          </Pressable>
         </View>
       </View>
 
@@ -199,6 +220,7 @@ export default function DetailScreen() {
           placeholder="Es. ingresso a sinistra, insegna verde…"
           placeholderTextColor="#9CA3AF"
           multiline
+          numberOfLines={4}
           style={styles.noteInput}
         />
       </View>
@@ -213,7 +235,8 @@ export default function DetailScreen() {
           <Text style={styles.primaryText}>Salva</Text>
         </Pressable>
       </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -280,6 +303,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
   },
+  chipIconRow: {
+    marginTop: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   chip: {
     flex: 1,
     padding: 12,
@@ -287,7 +316,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(17,24,39,0.04)",
   },
   chipLabel: { fontSize: 11, color: "#6B7280", fontWeight: "800", letterSpacing: 0.6 },
-  chipValue: { marginTop: 6, fontSize: 13, color: "#111827", fontWeight: "800" },
+  chipValue: { fontSize: 13, color: "#111827", fontWeight: "800" },
 
   noteCard: {
     marginTop: 12,
