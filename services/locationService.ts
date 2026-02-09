@@ -31,7 +31,7 @@ export async function getAddressLabel(
   if (!a) return undefined;
 
   const line1 = [a.street, a.streetNumber].filter(Boolean).join(" ").trim();
-  const line2 = [a.postalCode, a.city].filter(Boolean).join(" ").trim();
+  const line2 = [a.city].filter(Boolean).join(" ").trim();
   const line3 = [a.region, a.country].filter(Boolean).join(", ").trim();
 
   const fullAddress = [line1, line2, line3].filter(Boolean).join(", ").trim();

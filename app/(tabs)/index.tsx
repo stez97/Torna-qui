@@ -449,7 +449,7 @@ placeAddress: {
 
 time: {
   marginTop: 4,
-  fontSize: 13,
+  fontSize: 10,
   color: "#6B7280",
   fontWeight: "500",
 },
